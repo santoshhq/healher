@@ -57,6 +57,32 @@ class SignInModel extends ChangeNotifier {
     }
   }
 
+  Future<void> signInWithGoogle(BuildContext context) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // Simulate Google Sign In - Replace with your actual Google authentication logic
+      await Future.delayed(const Duration(seconds: 2));
+
+      // TODO: Implement your actual Google Sign-In logic here
+      // Example: await authService.signInWithGoogle();
+
+      _isLoading = false;
+      notifyListeners();
+
+      // Navigate to home on success
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Google sign in failed. Please try again.';
+      notifyListeners();
+    }
+  }
+
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }

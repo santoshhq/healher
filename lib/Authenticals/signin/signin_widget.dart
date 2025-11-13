@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:wave/wave.dart';
-import 'package:wave/config.dart';
+import 'package:provider/provider.dart';
 import 'signin_model.dart';
 
 class SignInWidget extends StatelessWidget {
@@ -12,308 +10,317 @@ class SignInWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => SignInModel(),
-      child: const SignInScreen(),
+      child: const ProfessionalSignInScreen(),
     );
   }
 }
 
-class SignInScreen extends StatelessWidget {
-  const SignInScreen({super.key});
+class ProfessionalSignInScreen extends StatelessWidget {
+  const ProfessionalSignInScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final model = Provider.of<SignInModel>(context);
 
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    // 🌸 Soft Wellness Gradient
+    const bgGradient = LinearGradient(
+      colors: [Color(0xFFFFF1F6), Color(0xFFFFDCE7)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFC1E3), // Light pink background
-      body: Stack(
-        children: [
-          // Animated wave background
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: WaveWidget(
-              config: CustomConfig(
-                gradients: [
-                  [const Color(0xFFFFE5F0), const Color(0xFFFFB3D9)],
-                  [const Color(0xFFFFD6E8), const Color(0xFFFF99CC)],
-                  [const Color(0xFFFFCCE0), const Color(0xFFFF80BF)],
-                  [const Color(0xFFFFB8D6), const Color(0xFFFF66B2)],
-                ],
-                durations: [35000, 19440, 10800, 6000],
-                heightPercentages: [0.20, 0.23, 0.25, 0.30],
-                gradientBegin: Alignment.bottomLeft,
-                gradientEnd: Alignment.topRight,
-              ),
-              size: const Size(double.infinity, 300),
-              waveAmplitude: 0,
-            ),
-          ),
-          // Main content
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // App Logo/Icon
-                      Center(
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.pink.withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/healhericon.png',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(gradient: bgGradient),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: width * 0.08),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 🌺 Logo
+                  Container(
+                    width: width * 0.28,
+                    height: width * 0.28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.pink.shade100,
+                          blurRadius: 20,
+                          offset: const Offset(0, 12),
                         ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        "assets/images/healhericon.png",
+                        fit: BoxFit.cover,
                       ),
-                      const SizedBox(height: 30),
+                    ),
+                  ),
 
-                      // Welcome Text
-                      Text(
-                        'Welcome Back',
-                        textAlign: TextAlign.center,
+                  SizedBox(height: height * 0.04),
+
+                  // 🌸 Clean Title
+                  Text(
+                    "Welcome Back",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.pink.shade700,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Text(
+                    "Sign in to your wellness journey",
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      color: Colors.pink.shade900.withOpacity(0.7),
+                    ),
+                  ),
+
+                  SizedBox(height: height * 0.04),
+
+                  // 📌 Email Field
+                  _inputField(
+                    controller: model.emailController,
+                    hint: "Email",
+                    icon: Icons.email_outlined,
+                    model: model,
+                  ),
+                  const SizedBox(height: 18),
+
+                  // 🔒 Password Field
+                  _inputField(
+                    controller: model.passwordController,
+                    hint: "Password",
+                    icon: Icons.lock_outline,
+                    model: model,
+                    obscure: model.obscurePassword,
+                    suffix: IconButton(
+                      icon: Icon(
+                        model.obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: Colors.pink.shade700,
+                      ),
+                      onPressed: model.togglePasswordVisibility,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, "/forgot-password"),
+                      child: Text(
+                        "Forgot password?",
                         style: GoogleFonts.poppins(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFFD81B60),
+                          color: Colors.pink.shade700,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Sign in to continue',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.pink[700],
-                        ),
+                    ),
+                  ),
+
+                  // Error message if any
+                  if (model.errorMessage != null) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.red.shade200),
                       ),
-                      const SizedBox(height: 40),
-
-                      // Email TextField
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.pink.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: model.emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          onChanged: (_) => model.clearError(),
-                          decoration: InputDecoration(
-                            hintText: 'Email',
-                            hintStyle: GoogleFonts.poppins(
-                              color: Colors.grey[400],
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.email_outlined,
-                              color: Color(0xFFD81B60),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
-                            ),
-                          ),
-                          style: GoogleFonts.poppins(fontSize: 16),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Password TextField
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.pink.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: model.passwordController,
-                          obscureText: model.obscurePassword,
-                          onChanged: (_) => model.clearError(),
-                          decoration: InputDecoration(
-                            hintText: 'Password',
-                            hintStyle: GoogleFonts.poppins(
-                              color: Colors.grey[400],
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.lock_outline,
-                              color: Color(0xFFD81B60),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                model.obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: Color(0xFFD81B60),
-                              ),
-                              onPressed: model.togglePasswordVisibility,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
-                            ),
-                          ),
-                          style: GoogleFonts.poppins(fontSize: 16),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Forgot Password
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/forgot-password');
-                          },
-                          child: Text(
-                            'Forgot Password?',
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFFD81B60),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Error Message
-                      if (model.errorMessage != null)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.red[300]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.red[700]),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  model.errorMessage!,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.red[700],
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      // Sign In Button
-                      ElevatedButton(
-                        onPressed: model.isLoading
-                            ? null
-                            : () => model.signIn(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD81B60), // Dark pink
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          elevation: 5,
-                          shadowColor: Colors.pink.withOpacity(0.5),
-                        ),
-                        child: model.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                'Sign In',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(height: 30),
-
-                      // Sign Up Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Row(
                         children: [
-                          Text(
-                            "Don't have an account? ",
-                            style: GoogleFonts.poppins(
-                              color: Colors.pink[700],
-                              fontSize: 14,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/signup');
-                            },
+                          Icon(Icons.error_outline, color: Colors.red.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
                             child: Text(
-                              'Sign Up',
+                              model.errorMessage!,
                               style: GoogleFonts.poppins(
-                                color: const Color(0xFFD81B60),
-                                fontWeight: FontWeight.bold,
                                 fontSize: 14,
+                                color: Colors.red.shade700,
                               ),
                             ),
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 15),
+                  ],
+
+                  // 🌺 Sign In
+                  _primaryButton(
+                    label: "Sign In",
+                    loading: model.isLoading,
+                    onTap: model.isLoading ? null : () => model.signIn(context),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // 🔘 Google Sign In (Official UI)
+                  _googleSignInButton(
+                    onTap: () => model.signInWithGoogle(context),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // Signup
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        "New user? ",
+                        style: GoogleFonts.poppins(
+                          color: Colors.pink.shade900.withOpacity(0.7),
+                          fontSize: 14,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, "/signup"),
+                        child: Text(
+                          "Create account",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: Colors.pink.shade700,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+
+                  SizedBox(height: height * 0.03),
+                ],
               ),
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  // 🌸 Modern Input Field
+  Widget _inputField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required SignInModel model,
+    bool obscure = false,
+    Widget? suffix,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.pink.shade100),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        onChanged: (_) => model.clearError(),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.pink.shade600),
+          suffixIcon: suffix,
+          hintText: hint,
+          hintStyle: GoogleFonts.poppins(
+            fontSize: 15,
+            color: Colors.grey.shade500,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 15,
+          ),
+        ),
+        style: GoogleFonts.poppins(fontSize: 16, color: Colors.pink.shade900),
+      ),
+    );
+  }
+
+  // 🌺 Primary Button
+  Widget _primaryButton({
+    required String label,
+    required bool loading,
+    required VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.pink.shade600,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 3,
+        ),
+        child: loading
+            ? const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              )
+            : Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+      ),
+    );
+  }
+
+  // 🔘 Google Button (Premium official style)
+  Widget _googleSignInButton({required VoidCallback onTap}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade300),
+            color: Colors.white,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.login, size: 18, color: Colors.grey.shade700),
+              const SizedBox(width: 8),
+              Text(
+                "Sign in with Google",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

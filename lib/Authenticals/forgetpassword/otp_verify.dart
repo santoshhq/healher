@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:wave/wave.dart';
-import 'package:wave/config.dart';
 
 class OTPVerifyModel extends ChangeNotifier {
   final List<TextEditingController> otpControllers = List.generate(
@@ -125,239 +123,215 @@ class OTPVerifyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = Provider.of<OTPVerifyModel>(context);
 
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    const bgGradient = LinearGradient(
+      colors: [Color(0xFFFFF1F6), Color(0xFFFFDCE7)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFC1E3), // Light pink background
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFD81B60)),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Stack(
-        children: [
-          // Animated wave background
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: WaveWidget(
-              config: CustomConfig(
-                gradients: [
-                  [const Color(0xFFFFE5F0), const Color(0xFFFFB3D9)],
-                  [const Color(0xFFFFD6E8), const Color(0xFFFF99CC)],
-                  [const Color(0xFFFFCCE0), const Color(0xFFFF80BF)],
-                  [const Color(0xFFFFB8D6), const Color(0xFFFF66B2)],
-                ],
-                durations: [35000, 19440, 10800, 6000],
-                heightPercentages: [0.20, 0.23, 0.25, 0.30],
-                gradientBegin: Alignment.bottomLeft,
-                gradientEnd: Alignment.topRight,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(gradient: bgGradient),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, color: Colors.pink.shade700),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
-              size: const Size(double.infinity, 300),
-              waveAmplitude: 0,
-            ),
-          ),
-          // Main content
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Icon
-                      Center(
-                        child: Container(
-                          width: 100,
-                          height: 100,
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: width * 0.08),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: width * 0.28,
+                          height: width * 0.28,
                           decoration: BoxDecoration(
-                            color: Colors.white,
                             shape: BoxShape.circle,
+                            color: Colors.white,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.pink.withOpacity(0.3),
+                                color: Colors.pink.shade100,
                                 blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                offset: const Offset(0, 12),
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.mail_outline,
                             size: 50,
-                            color: Color(0xFFD81B60),
+                            color: Colors.pink.shade700,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 30),
+                        SizedBox(height: height * 0.04),
 
-                      // Title
-                      Text(
-                        'Verify OTP',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFFD81B60),
+                        Text(
+                          'Verify OTP',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.pink.shade700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Enter the 4-digit code sent to\n${model.email}',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.pink[700],
+                        const SizedBox(height: 6),
+                        Text(
+                          'Enter the 4-digit code sent to\n${model.email}',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            color: Colors.pink.shade900.withOpacity(0.7),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 40),
+                        SizedBox(height: height * 0.04),
 
-                      // OTP Input Fields
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(4, (index) {
-                          return SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(15),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.pink.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: List.generate(4, (index) {
+                            return SizedBox(
+                              width: 60,
+                              height: 60,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.pink.shade100,
                                   ),
-                                ],
-                              ),
-                              child: TextField(
-                                controller: model.otpControllers[index],
-                                focusNode: model.focusNodes[index],
-                                keyboardType: TextInputType.number,
-                                textAlign: TextAlign.center,
-                                maxLength: 1,
-                                onChanged: (value) {
-                                  model.clearError();
-                                  if (value.isNotEmpty && index < 3) {
-                                    model.focusNodes[index + 1].requestFocus();
-                                  }
-                                  if (value.isEmpty && index > 0) {
-                                    model.focusNodes[index - 1].requestFocus();
-                                  }
-                                },
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                decoration: InputDecoration(
-                                  counterText: '',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white,
                                 ),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFD81B60),
+                                child: TextField(
+                                  controller: model.otpControllers[index],
+                                  focusNode: model.focusNodes[index],
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  maxLength: 1,
+                                  onChanged: (value) {
+                                    model.clearError();
+                                    if (value.isNotEmpty && index < 3) {
+                                      model.focusNodes[index + 1]
+                                          .requestFocus();
+                                    }
+                                    if (value.isEmpty && index > 0) {
+                                      model.focusNodes[index - 1]
+                                          .requestFocus();
+                                    }
+                                  },
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    border: InputBorder.none,
+                                  ),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.pink.shade700,
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 30),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 20),
 
-                      // Resend OTP
-                      Center(
-                        child: TextButton(
-                          onPressed: model.isLoading
+                        GestureDetector(
+                          onTap: model.isLoading
                               ? null
                               : () => model.resendOTP(),
                           child: Text(
                             'Resend OTP',
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFFD81B60),
+                              color: Colors.pink.shade700,
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
+                        const SizedBox(height: 10),
 
-                      // Error Message
-                      if (model.errorMessage != null)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.red[50],
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.red[300]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.red[700]),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  model.errorMessage!,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.red[700],
-                                    fontSize: 14,
+                        if (model.errorMessage != null)
+                          const SizedBox(height: 10),
+                        if (model.errorMessage != null)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red.shade700,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    model.errorMessage!,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.red.shade700,
+                                    ),
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+
+                        const SizedBox(height: 10),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: model.isLoading
+                                ? null
+                                : () => model.verifyOTP(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.pink.shade600,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                            ],
+                              elevation: 3,
+                            ),
+                            child: model.isLoading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  )
+                                : Text(
+                                    'Submit',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
 
-                      // Submit Button
-                      ElevatedButton(
-                        onPressed: model.isLoading
-                            ? null
-                            : () => model.verifyOTP(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD81B60), // Dark pink
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          elevation: 5,
-                          shadowColor: Colors.pink.withOpacity(0.5),
-                        ),
-                        child: model.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                'Submit',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ],
+                        SizedBox(height: height * 0.03),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

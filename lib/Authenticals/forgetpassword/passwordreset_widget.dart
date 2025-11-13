@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:wave/wave.dart';
-import 'package:wave/config.dart';
 import 'passwordreset_model.dart';
 
 class PasswordResetWidget extends StatelessWidget {
@@ -30,234 +28,233 @@ class PasswordResetScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = Provider.of<PasswordResetModel>(context);
 
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+
+    const bgGradient = LinearGradient(
+      colors: [Color(0xFFFFF1F6), Color(0xFFFFDCE7)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFC1E3), // Light pink background
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFD81B60)),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Icon
-                  Center(
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.pink.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.lock_open,
-                        size: 50,
-                        color: Color(0xFFD81B60),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Title
-                  Text(
-                    'Set New Password',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFD81B60),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Create a strong password for your account',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.pink[700],
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-
-                  // New Password TextField
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.pink.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: model.passwordController,
-                      obscureText: model.obscurePassword,
-                      onChanged: (_) => model.clearError(),
-                      decoration: InputDecoration(
-                        hintText: 'New Password',
-                        hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
-                        prefixIcon: const Icon(
-                          Icons.lock_outline,
-                          color: Color(0xFFD81B60),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            model.obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: const Color(0xFFD81B60),
-                          ),
-                          onPressed: model.togglePasswordVisibility,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                      ),
-                      style: GoogleFonts.poppins(fontSize: 16),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Confirm Password TextField
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.pink.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: model.confirmPasswordController,
-                      obscureText: model.obscureConfirmPassword,
-                      onChanged: (_) => model.clearError(),
-                      decoration: InputDecoration(
-                        hintText: 'Confirm Password',
-                        hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
-                        prefixIcon: const Icon(
-                          Icons.lock_outline,
-                          color: Color(0xFFD81B60),
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            model.obscureConfirmPassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: const Color(0xFFD81B60),
-                          ),
-                          onPressed: model.toggleConfirmPasswordVisibility,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                      ),
-                      style: GoogleFonts.poppins(fontSize: 16),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Error Message
-                  if (model.errorMessage != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.red[300]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: Colors.red[700]),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              model.errorMessage!,
-                              style: GoogleFonts.poppins(
-                                color: Colors.red[700],
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  // Confirm Button
-                  ElevatedButton(
-                    onPressed: model.isLoading
-                        ? null
-                        : () => model.resetPassword(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD81B60), // Dark pink
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      elevation: 5,
-                      shadowColor: Colors.pink.withOpacity(0.5),
-                    ),
-                    child: model.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            'Confirm',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(gradient: bgGradient),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, color: Colors.pink.shade700),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
-            ),
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: width * 0.08),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: width * 0.28,
+                          height: width * 0.28,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.pink.shade100,
+                                blurRadius: 20,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.lock_open,
+                            size: 50,
+                            color: Colors.pink.shade700,
+                          ),
+                        ),
+                        SizedBox(height: height * 0.04),
+
+                        Text(
+                          'Set New Password',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.pink.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Create a strong password for your account',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            color: Colors.pink.shade900.withOpacity(0.7),
+                          ),
+                        ),
+                        SizedBox(height: height * 0.04),
+
+                        _inputField(
+                          controller: model.passwordController,
+                          hint: "New Password",
+                          icon: Icons.lock_outline,
+                          model: model,
+                          obscure: model.obscurePassword,
+                          suffix: IconButton(
+                            icon: Icon(
+                              model.obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.pink.shade700,
+                            ),
+                            onPressed: model.togglePasswordVisibility,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+
+                        _inputField(
+                          controller: model.confirmPasswordController,
+                          hint: "Confirm Password",
+                          icon: Icons.lock_outline,
+                          model: model,
+                          obscure: model.obscureConfirmPassword,
+                          suffix: IconButton(
+                            icon: Icon(
+                              model.obscureConfirmPassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.pink.shade700,
+                            ),
+                            onPressed: model.toggleConfirmPasswordVisibility,
+                          ),
+                        ),
+
+                        if (model.errorMessage != null)
+                          const SizedBox(height: 10),
+                        if (model.errorMessage != null)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red.shade700,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    model.errorMessage!,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: Colors.red.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        const SizedBox(height: 20),
+
+                        _primaryButton(
+                          label: "Confirm",
+                          loading: model.isLoading,
+                          onTap: model.isLoading
+                              ? null
+                              : () => model.resetPassword(context),
+                        ),
+
+                        SizedBox(height: height * 0.03),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _inputField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required PasswordResetModel model,
+    bool obscure = false,
+    Widget? suffix,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.pink.shade100),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        onChanged: (_) => model.clearError(),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.pink.shade600),
+          suffixIcon: suffix,
+          hintText: hint,
+          hintStyle: GoogleFonts.poppins(
+            fontSize: 15,
+            color: Colors.grey.shade500,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 15,
+          ),
+        ),
+        style: GoogleFonts.poppins(fontSize: 16, color: Colors.pink.shade900),
+      ),
+    );
+  }
+
+  Widget _primaryButton({
+    required String label,
+    required bool loading,
+    required VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.pink.shade600,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 3,
+        ),
+        child: loading
+            ? const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              )
+            : Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
