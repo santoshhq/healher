@@ -1,29 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'signin_model.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
+import 'passwordreset_model.dart';
 
-class SignInWidget extends StatelessWidget {
-  const SignInWidget({super.key});
+class PasswordResetWidget extends StatelessWidget {
+  const PasswordResetWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, String>? ??
+        {};
+    final email = args['email'] ?? '';
+    final otp = args['otp'] ?? '';
+
     return ChangeNotifierProvider(
-      create: (_) => SignInModel(),
-      child: const SignInScreen(),
+      create: (_) => PasswordResetModel()..setCredentials(email, otp),
+      child: const PasswordResetScreen(),
     );
   }
 }
 
-class SignInScreen extends StatelessWidget {
-  const SignInScreen({super.key});
+class PasswordResetScreen extends StatelessWidget {
+  const PasswordResetScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final model = Provider.of<SignInModel>(context);
+    final model = Provider.of<PasswordResetModel>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFC1E3), // Light pink background
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFD81B60)),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -33,11 +49,11 @@ class SignInScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // App Logo/Icon
+                  // Icon
                   Center(
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 100,
+                      height: 100,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -49,19 +65,18 @@ class SignInScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/healhericon.png',
-                          fit: BoxFit.cover,
-                        ),
+                      child: const Icon(
+                        Icons.lock_open,
+                        size: 50,
+                        color: Color(0xFFD81B60),
                       ),
                     ),
                   ),
                   const SizedBox(height: 30),
 
-                  // Welcome Text
+                  // Title
                   Text(
-                    'Welcome Back',
+                    'Set New Password',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 32,
@@ -71,56 +86,16 @@ class SignInScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to continue',
+                    'Create a strong password for your account',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 14,
                       color: Colors.pink[700],
                     ),
                   ),
                   const SizedBox(height: 40),
 
-                  // Email TextField
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.pink.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: model.emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      onChanged: (_) => model.clearError(),
-                      decoration: InputDecoration(
-                        hintText: 'Email',
-                        hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
-                        prefixIcon: const Icon(
-                          Icons.email_outlined,
-                          color: Color(0xFFD81B60),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                      ),
-                      style: GoogleFonts.poppins(fontSize: 16),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Password TextField
+                  // New Password TextField
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -138,7 +113,7 @@ class SignInScreen extends StatelessWidget {
                       obscureText: model.obscurePassword,
                       onChanged: (_) => model.clearError(),
                       decoration: InputDecoration(
-                        hintText: 'Password',
+                        hintText: 'New Password',
                         hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
                         prefixIcon: const Icon(
                           Icons.lock_outline,
@@ -149,7 +124,7 @@ class SignInScreen extends StatelessWidget {
                             model.obscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: Color(0xFFD81B60),
+                            color: const Color(0xFFD81B60),
                           ),
                           onPressed: model.togglePasswordVisibility,
                         ),
@@ -167,26 +142,56 @@ class SignInScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(fontSize: 16),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
 
-                  // Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/forgot-password');
-                      },
-                      child: Text(
-                        'Forgot Password?',
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFFD81B60),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                  // Confirm Password TextField
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.pink.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: model.confirmPasswordController,
+                      obscureText: model.obscureConfirmPassword,
+                      onChanged: (_) => model.clearError(),
+                      decoration: InputDecoration(
+                        hintText: 'Confirm Password',
+                        hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color(0xFFD81B60),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            model.obscureConfirmPassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: const Color(0xFFD81B60),
+                          ),
+                          onPressed: model.toggleConfirmPasswordVisibility,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
                         ),
                       ),
+                      style: GoogleFonts.poppins(fontSize: 16),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
 
                   // Error Message
                   if (model.errorMessage != null)
@@ -215,11 +220,11 @@ class SignInScreen extends StatelessWidget {
                       ),
                     ),
 
-                  // Sign In Button
+                  // Confirm Button
                   ElevatedButton(
                     onPressed: model.isLoading
                         ? null
-                        : () => model.signIn(context),
+                        : () => model.resetPassword(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFD81B60), // Dark pink
                       foregroundColor: Colors.white,
@@ -240,41 +245,13 @@ class SignInScreen extends StatelessWidget {
                             ),
                           )
                         : Text(
-                            'Sign In',
+                            'Confirm',
                             style: GoogleFonts.poppins(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Sign Up Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: GoogleFonts.poppins(
-                          color: Colors.pink[700],
-                          fontSize: 14,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/signup');
-                        },
-                        child: Text(
-                          'Sign Up',
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFFD81B60),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),

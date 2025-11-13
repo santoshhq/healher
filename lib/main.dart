@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'signin/signin_widget.dart';
-import 'signup/signup_widget.dart';
-import 'forgetpassword/forgetpassword_widget.dart';
-import 'forgetpassword/otp_verify.dart';
-import 'forgetpassword/passwordreset_widget.dart';
+import 'Authenticals/signin/signin_widget.dart';
+import 'Authenticals/signup/signup_widget.dart';
+import 'Authenticals/forgetpassword/forgetpassword_widget.dart';
+import 'Authenticals/forgetpassword/otp_verify.dart';
+import 'Authenticals/forgetpassword/passwordreset_widget.dart';
+import 'bottom_navigation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordWidget(),
         '/otp-verify': (context) => const OTPVerifyWidget(),
         '/password-reset': (context) => const PasswordResetWidget(),
-        '/home': (context) => const MyHomePage(title: 'Heal Her'),
+        '/home': (context) => const BottomNavigationWidget(),
       },
     );
   }
