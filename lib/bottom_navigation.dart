@@ -1,819 +1,272 @@
+// Improved Flutter bottom navigation and screens
+// Single-file demo: Provider state, modern "React-like" UI, responsive, animated
+// Paste this into a Dart file (e.g. lib/flutter_restyle_bottom_nav.dart)
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// Provider Model for Navigation State
+// ---------------------------
+// Theme & Design Tokens
+// ---------------------------
+const Color kPrimary = Color(0xFFD81B60);
+const Color kPrimaryLight = Color(0xFFFF66B2);
+const Color kBg = Color(0xFFF8F6FB);
+const double kRadius = 16.0;
+
+final _cardShadow = [
+  BoxShadow(
+    color: Colors.black.withOpacity(0.06),
+    blurRadius: 18,
+    offset: Offset(0, 10),
+  ),
+];
+
+// ---------------------------
+// Navigation Model (Provider)
+// ---------------------------
 class NavigationModel extends ChangeNotifier {
-  int _currentIndex = 2; // Start with home (middle icon)
-
-  int get currentIndex => _currentIndex;
-
-  void setIndex(int index) {
-    _currentIndex = index;
+  int _index = 2; // center home
+  int get index => _index;
+  setIndex(int i) {
+    if (_index == i) return;
+    _index = i;
     notifyListeners();
   }
 }
 
-// Main Bottom Navigation Widget
-class BottomNavigationWidget extends StatelessWidget {
-  const BottomNavigationWidget({super.key});
+// ---------------------------
+// App Entry (for demo)
+// ---------------------------
+class RestyledApp extends StatelessWidget {
+  const RestyledApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => NavigationModel(),
-      child: const BottomNavigationScreen(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'HealHer — Modern UI',
+        theme: ThemeData(
+          scaffoldBackgroundColor: kBg,
+          textTheme: GoogleFonts.poppinsTextTheme(),
+          primaryColor: kPrimary,
+          useMaterial3: true,
+        ),
+        home: const BottomNavigationShell(),
+      ),
     );
   }
 }
 
-class BottomNavigationScreen extends StatelessWidget {
-  const BottomNavigationScreen({super.key});
+// ---------------------------
+// Bottom Navigation Shell
+// ---------------------------
+class BottomNavigationShell extends StatelessWidget {
+  const BottomNavigationShell({Key? key}) : super(key: key);
+
+  final List<Widget> _pages = const [
+    PeriodTrackerPage(),
+    HealthPage(),
+    HomePage(),
+    BarcodeScannerPage(),
+    ProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final navigationModel = Provider.of<NavigationModel>(context);
+    final nav = context.watch<NavigationModel>();
 
-    // Define the pages for each navigation item
-    final List<Widget> pages = [
-      const PeriodTrackerPage(),
-      const HealthPage(),
-      const HomePage(),
-      const BarcodeScannerPage(),
-      const ProfilePage(),
+    return Scaffold(
+      extendBody: true,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        switchInCurve: Curves.easeOutCubic,
+        child: _pages[nav.index],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => nav.setIndex(2),
+        elevation: 6,
+        backgroundColor: kPrimary,
+        child: Icon(Icons.home, size: 28, color: Colors.white),
+      ),
+      bottomNavigationBar: _CustomBottomBar(
+        currentIndex: nav.index,
+        onTap: (i) => nav.setIndex(i),
+      ),
+    );
+  }
+}
+
+// ---------------------------
+// Custom Bottom Bar — Modern, subtle
+// ---------------------------
+class _CustomBottomBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  const _CustomBottomBar({required this.currentIndex, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Map<String, dynamic>>[
+      {'icon': Icons.calendar_today, 'label': 'Cycle'},
+      {'icon': Icons.favorite, 'label': 'Health'},
+      {'icon': Icons.home, 'label': 'Home'},
+      {'icon': Icons.qr_code_scanner, 'label': 'Scan'},
+      {'icon': Icons.person, 'label': 'Profile'},
     ];
 
-    return Scaffold(
-      body: pages[navigationModel.currentIndex],
-      bottomNavigationBar: CurvedNavigationBar(
-        index: navigationModel.currentIndex,
-        height: 60.0,
-        items: const <Widget>[
-          Icon(Icons.calendar_today, size: 30, color: Colors.white),
-          Icon(Icons.favorite, size: 30, color: Colors.white),
-          Icon(Icons.home, size: 35, color: Colors.white), // Highlighted middle
-          Icon(Icons.qr_code_scanner, size: 30, color: Colors.white),
-          Icon(Icons.person, size: 30, color: Colors.white),
-        ],
-        color: const Color(0xFFD81B60), // Dark pink
-        buttonBackgroundColor: const Color(
-          0xFFD81B60,
-        ), // Dark pink for selected
-        backgroundColor: Colors.white, // White background
-        animationCurve: Curves.easeInOut,
-        animationDuration: const Duration(milliseconds: 300),
-        onTap: (index) {
-          navigationModel.setIndex(index);
-        },
+    return SafeArea(
+      minimum: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        margin: const EdgeInsets.symmetric(horizontal: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: _cardShadow,
+        ),
+        child: Row(
+          children: List.generate(items.length, (i) {
+            // Leave center slot for FAB
+            if (i == 2) {
+              return Expanded(child: SizedBox());
+            }
+            final displayIndex = i < 2 ? i : i; // mapping preserved
+
+            return Expanded(
+              child: _NavButton(
+                icon: items[i]['icon'],
+                label: items[i]['label'],
+                selected: currentIndex == i,
+                onTap: () => onTap(i),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
 }
 
-// Page 0: Period Tracker
-class PeriodTrackerPage extends StatelessWidget {
-  const PeriodTrackerPage({super.key});
+class _NavButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _NavButton({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFE5F0), Color(0xFFFFC1E3), Color(0xFFFFB3D9)],
-          ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 280),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        decoration: BoxDecoration(
+          color: selected ? kPrimary.withOpacity(0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Custom App Bar
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.pink.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.calendar_today,
-                        color: Color(0xFFD81B60),
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Text(
-                      'Period Tracker',
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFD81B60),
-                      ),
-                    ),
-                  ],
-                ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: selected ? kPrimary : Colors.grey[600]),
+            const SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 280),
+              style: TextStyle(
+                fontSize: selected ? 12 : 11,
+                color: selected ? kPrimary : Colors.grey[600],
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Main Card
-                      Container(
-                        padding: const EdgeInsets.all(30),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.pink.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFF66B2),
-                                    Color(0xFFD81B60),
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFFD81B60,
-                                    ).withOpacity(0.4),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.favorite,
-                                size: 60,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              'Track Your Cycle',
-                              style: GoogleFonts.poppins(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Monitor your menstrual health with ease',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Feature Cards
-                      _buildFeatureCard(
-                        icon: Icons.calendar_month,
-                        title: 'Cycle Prediction',
-                        description: 'Accurate predictions',
-                        color: const Color(0xFFFF80BF),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildFeatureCard(
-                        icon: Icons.notifications_active,
-                        title: 'Reminders',
-                        description: 'Never miss a date',
-                        color: const Color(0xFFFF99CC),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildFeatureCard(
-                        icon: Icons.insights,
-                        title: 'Health Insights',
-                        description: 'Detailed analytics',
-                        color: const Color(0xFFFFB3D9),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+              child: Text(label),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(icon, color: color, size: 30),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFD81B60),
-                  ),
-                ),
-                Text(
-                  description,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios,
-            color: Color(0xFFD81B60),
-            size: 20,
-          ),
-        ],
       ),
     );
   }
 }
 
-// Page 1: Health & Workouts
-class HealthPage extends StatelessWidget {
-  const HealthPage({super.key});
+// ---------------------------
+// Reusable App Scaffold
+// ---------------------------
+class AppSectionScaffold extends StatelessWidget {
+  final String title;
+  final Widget? trailing;
+  final Widget child;
+
+  const AppSectionScaffold({
+    Key? key,
+    required this.title,
+    required this.child,
+    this.trailing,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFD6E8), Color(0xFFFFC1E3), Color(0xFFFF99CC)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Custom App Bar
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.pink.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.favorite,
-                        color: Color(0xFFD81B60),
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Text(
-                      'Health & Workouts',
-                      style: GoogleFonts.poppins(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFD81B60),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Stats Cards Row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              '1,234',
-                              'Steps Today',
-                              Icons.directions_walk,
-                              const Color(0xFFFF80BF),
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: _buildStatCard(
-                              '245',
-                              'Calories',
-                              Icons.local_fire_department,
-                              const Color(0xFFFF66B2),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      // Workout Card
-                      Container(
-                        padding: const EdgeInsets.all(25),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF66B2), Color(0xFFD81B60)],
-                          ),
-                          borderRadius: BorderRadius.circular(25),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFD81B60).withOpacity(0.4),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Today\'s Goal',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.3),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    '65%',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: LinearProgressIndicator(
-                                value: 0.65,
-                                minHeight: 10,
-                                backgroundColor: Colors.white.withOpacity(0.3),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 15),
-                            Text(
-                              '6,500 / 10,000 steps',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Workout Options
-                      _buildWorkoutCard(
-                        'Yoga & Meditation',
-                        '20 min session',
-                        Icons.self_improvement,
-                        const Color(0xFFFFB3D9),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildWorkoutCard(
-                        'Cardio Training',
-                        '30 min session',
-                        Icons.fitness_center,
-                        const Color(0xFFFF99CC),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildWorkoutCard(
-                        'Strength Training',
-                        '45 min session',
-                        Icons.sports_gymnastics,
-                        const Color(0xFFFF80BF),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    String value,
-    String label,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+    return SafeArea(
       child: Column(
         children: [
-          Icon(icon, color: color, size: 35),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFFD81B60),
-            ),
-          ),
-          Text(
-            label,
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorkoutCard(
-    String title,
-    String duration,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(icon, color: color, size: 30),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFD81B60),
-                  ),
-                ),
-                Text(
-                  duration,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFD81B60),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Page 2: Home (Middle - Highlighted)
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFFFE5F0), Color(0xFFFFFFFF)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome Back! 👋',
-                          style: GoogleFonts.poppins(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFD81B60),
-                          ),
-                        ),
-                        Text(
-                          'Let\'s take care of your health',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFF66B2), Color(0xFFD81B60)],
-                        ),
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFD81B60).withOpacity(0.3),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.notifications_active,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                // Main Feature Card
                 Container(
-                  padding: const EdgeInsets.all(25),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFFF66B2), Color(0xFFD81B60)],
-                    ),
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFD81B60).withOpacity(0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: _cardShadow,
                   ),
+                  child: Icon(
+                    Icons.local_fire_department,
+                    color: kPrimaryLight,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.healing,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: Text(
-                              'Your Health Dashboard',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildQuickStat('8h 20m', 'Sleep'),
-                          _buildQuickStat('2.1L', 'Water'),
-                          _buildQuickStat('1,850', 'Calories'),
-                        ],
+                      const SizedBox(height: 4),
+                      Text(
+                        'Make small daily improvements',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 25),
-                Text(
-                  'Quick Actions',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFD81B60),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                // Grid of Quick Actions
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  children: [
-                    _buildActionCard(
-                      'Track Period',
-                      Icons.calendar_today,
-                      const Color(0xFFFFB3D9),
-                    ),
-                    _buildActionCard(
-                      'Log Workout',
-                      Icons.fitness_center,
-                      const Color(0xFFFF99CC),
-                    ),
-                    _buildActionCard(
-                      'Scan Food',
-                      Icons.qr_code_scanner,
-                      const Color(0xFFFF80BF),
-                    ),
-                    _buildActionCard(
-                      'Health Tips',
-                      Icons.lightbulb,
-                      const Color(0xFFFF66B2),
-                    ),
-                  ],
-                ),
+                if (trailing != null) trailing!,
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStat(String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: Colors.white.withOpacity(0.8),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionCard(String title, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(icon, color: color, size: 35),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFFD81B60),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: child,
             ),
           ),
         ],
@@ -822,243 +275,190 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// Page 3: Barcode Scanner
-class BarcodeScannerPage extends StatelessWidget {
-  const BarcodeScannerPage({super.key});
+// ---------------------------
+// Page Implementations (clean, modular)
+// ---------------------------
+
+class PeriodTrackerPage extends StatelessWidget {
+  const PeriodTrackerPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFCCE0), Color(0xFFFFC1E3), Color(0xFFFF80BF)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Custom App Bar
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.pink.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.qr_code_scanner,
-                        color: Color(0xFFD81B60),
-                        size: 28,
-                      ),
+    return AppSectionScaffold(
+      title: 'Period Tracker',
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            _primaryCard(
+              child: Column(
+                children: [
+                  _bigCircle(icon: Icons.calendar_month, color: kPrimaryLight),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Predict your cycle',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
                     ),
-                    const SizedBox(width: 15),
-                    Text(
-                      'Food Scanner',
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFD81B60),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Scanner Card
-                      Container(
-                        height: 300,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.pink.withOpacity(0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(30),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFF66B2),
-                                    Color(0xFFD81B60),
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFFD81B60,
-                                    ).withOpacity(0.4),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.qr_code_scanner,
-                                size: 80,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 30),
-                            Text(
-                              'Scan Food Barcode',
-                              style: GoogleFonts.poppins(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFD81B60),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Get instant nutrition information',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 25),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFD81B60),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 40,
-                                  vertical: 15,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                elevation: 5,
-                              ),
-                              child: Text(
-                                'Start Scanning',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 25),
-                      // Recent Scans
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Recent Scans',
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFD81B60),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      _buildRecentScanCard(
-                        'Apple',
-                        '52 cal',
-                        Icons.apple,
-                        const Color(0xFFFFB3D9),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildRecentScanCard(
-                        'Yogurt',
-                        '150 cal',
-                        Icons.coffee,
-                        const Color(0xFFFF99CC),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildRecentScanCard(
-                        'Whole Grain Bread',
-                        '80 cal',
-                        Icons.bakery_dining,
-                        const Color(0xFFFF80BF),
-                      ),
-                    ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Accurate cycle & period predictions',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 18),
+            _featureGrid(context, [
+              {
+                'icon': Icons.insights,
+                'title': 'Insights',
+                'desc': 'Patterns & analytics',
+              },
+              {
+                'icon': Icons.notifications,
+                'title': 'Reminders',
+                'desc': 'Never miss a pill',
+              },
+              {
+                'icon': Icons.analytics,
+                'title': 'Trends',
+                'desc': 'Health correlations',
+              },
+            ]),
+            const SizedBox(height: 18),
+            _compactCard(
+              title: 'Update cycle data',
+              subtitle: 'Tap to add a new cycle entry',
+              actionLabel: 'Add',
+              onTap: () {},
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildRecentScanCard(
-    String name,
-    String calories,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _primaryCard({required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(kRadius),
+        boxShadow: _cardShadow,
+      ),
+      child: child,
+    );
+  }
+
+  Widget _bigCircle({required IconData icon, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [color.withOpacity(0.95), kPrimary]),
+        shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: kPrimary.withOpacity(0.18),
+            blurRadius: 18,
+            offset: Offset(0, 10),
           ),
         ],
+      ),
+      child: Icon(icon, size: 48, color: Colors.white),
+    );
+  }
+
+  Widget _featureGrid(BuildContext context, List<Map<String, dynamic>> items) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: items.map((it) {
+        return Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: _cardShadow,
+            ),
+            child: Column(
+              children: [
+                Icon(it['icon'] as IconData, size: 24, color: kPrimary),
+                const SizedBox(height: 6),
+                Text(
+                  it['title']!,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  it['desc']!,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _compactCard({
+    required String title,
+    required String subtitle,
+    required String actionLabel,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: _cardShadow,
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 25),
-          ),
-          const SizedBox(width: 15),
           Expanded(
-            child: Text(
-              name,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFD81B60),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: onTap,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
-          ),
-          Text(
-            calories,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            child: Text(actionLabel),
           ),
         ],
       ),
@@ -1066,255 +466,594 @@ class BarcodeScannerPage extends StatelessWidget {
   }
 }
 
-// Page 4: Profile
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+class HealthPage extends StatelessWidget {
+  const HealthPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFFFE5F0), Color(0xFFFFFFFF)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
+    return AppSectionScaffold(
+      title: 'Health & Workouts',
+      child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            Row(
               children: [
-                // Header with gradient
-                Container(
-                  padding: const EdgeInsets.all(30),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFFF66B2), Color(0xFFD81B60)],
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(40),
-                      bottomRight: Radius.circular(40),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      // Profile Picture
-                      Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(30),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.3),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Jane Doe',
-                        style: GoogleFonts.poppins(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        'janedoe@healher.com',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                      const SizedBox(height: 25),
-                      // Stats Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildProfileStat('24', 'Age'),
-                          Container(
-                            height: 40,
-                            width: 1,
-                            color: Colors.white.withOpacity(0.3),
-                          ),
-                          _buildProfileStat('56kg', 'Weight'),
-                          Container(
-                            height: 40,
-                            width: 1,
-                            color: Colors.white.withOpacity(0.3),
-                          ),
-                          _buildProfileStat('165cm', 'Height'),
-                        ],
-                      ),
-                    ],
-                  ),
+                Expanded(
+                  child: _statCard('Steps', '1,234', Icons.directions_walk),
                 ),
-                const SizedBox(height: 25),
-                // Menu Options
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      _buildMenuCard(
-                        'Personal Information',
-                        Icons.person_outline,
-                        const Color(0xFFFFB3D9),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildMenuCard(
-                        'Health Records',
-                        Icons.medical_information,
-                        const Color(0xFFFF99CC),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildMenuCard(
-                        'Notifications',
-                        Icons.notifications_outlined,
-                        const Color(0xFFFF80BF),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildMenuCard(
-                        'Privacy & Security',
-                        Icons.lock_outline,
-                        const Color(0xFFFF66B2),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildMenuCard(
-                        'Help & Support',
-                        Icons.help_outline,
-                        const Color(0xFFFFB3D9),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildMenuCard(
-                        'About',
-                        Icons.info_outline,
-                        const Color(0xFFFF99CC),
-                      ),
-                      const SizedBox(height: 25),
-                      // Logout Button
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD81B60),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 50,
-                            vertical: 15,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          elevation: 5,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.logout),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Logout',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                    ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _statCard(
+                    'Calories',
+                    '245',
+                    Icons.local_fire_department,
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [kPrimaryLight, kPrimary]),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: kPrimary.withOpacity(0.16),
+                    blurRadius: 16,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Today's Goal",
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: 0.65,
+                    minHeight: 8,
+                    backgroundColor: Colors.white24,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '6,500 / 10,000 steps',
+                    style: GoogleFonts.poppins(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Column(
+              children: [
+                _actionTile(
+                  'Yoga & Meditation',
+                  '20 min',
+                  Icons.self_improvement,
+                ),
+                const SizedBox(height: 12),
+                _actionTile('Cardio Training', '30 min', Icons.fitness_center),
+                const SizedBox(height: 12),
+                _actionTile(
+                  'Strength Training',
+                  '45 min',
+                  Icons.sports_gymnastics,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileStat(String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+  Widget _statCard(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: _cardShadow,
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: kPrimary, size: 28),
+          const SizedBox(height: 8),
+          Text(value, style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
           ),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: Colors.white.withOpacity(0.8),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildMenuCard(String title, IconData icon, Color color) {
+  Widget _actionTile(String title, String subtitle, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: _cardShadow,
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: kPrimary.withOpacity(0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: kPrimary),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFD81B60),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
             ),
           ),
-          const Icon(
-            Icons.arrow_forward_ios,
-            color: Color(0xFFD81B60),
-            size: 18,
+          OutlinedButton(
+            onPressed: () {},
+            child: Icon(Icons.play_arrow, color: kPrimary),
           ),
         ],
       ),
     );
   }
 }
+
+class HomePage extends StatelessWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSectionScaffold(
+      title: 'Welcome Back! 👋',
+      trailing: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: _cardShadow,
+        ),
+        child: Icon(Icons.notifications_active, color: kPrimary),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [kPrimaryLight, kPrimary]),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: kPrimary.withOpacity(0.14),
+                    blurRadius: 12,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your Health Dashboard',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Overview of your vitals',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      _tinyStat('Sleep', '8h 20m'),
+                      const SizedBox(width: 12),
+                      _tinyStat('Water', '2.1L'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Quick Actions',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              children: [
+                _quickAction('upload Reports', Icons.upload_file),
+                _quickAction('Gynologist', Icons.local_hospital),
+                _quickAction('Talk with Ai', Icons.smart_toy),
+                _quickAction('Community', Icons.lightbulb),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tinyStat(String label, String value) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        value,
+        style: GoogleFonts.poppins(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        label,
+        style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12),
+      ),
+    ],
+  );
+
+  Widget _quickAction(String title, IconData icon) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: _cardShadow,
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 28, color: kPrimary),
+        const SizedBox(height: 8),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
+}
+
+class BarcodeScannerPage extends StatelessWidget {
+  const BarcodeScannerPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSectionScaffold(
+      title: 'Food Scanner',
+      child: Column(
+        children: [
+          Container(
+            height: 300,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: _cardShadow,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [kPrimaryLight, kPrimary],
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: kPrimary.withOpacity(0.16),
+                          blurRadius: 12,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.qr_code_scanner,
+                      size: 70,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Scan product barcodes for nutrition',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Start Scanning',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Recent Scans',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _recentItem('Apple', '52 cal'),
+          const SizedBox(height: 8),
+          _recentItem('Yogurt', '150 cal'),
+        ],
+      ),
+    );
+  }
+
+  Widget _recentItem(String name, String cal) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: _cardShadow,
+    ),
+    child: Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: kPrimary.withOpacity(0.08),
+          child: Icon(Icons.food_bank, color: kPrimary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            name,
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
+        ),
+        Text(cal, style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+      ],
+    ),
+  );
+}
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSectionScaffold(
+      title: 'Profile',
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [kPrimaryLight, kPrimary]),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: kPrimary.withOpacity(0.14),
+                    blurRadius: 12,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 36, color: kPrimary),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Jane Doe',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'janedoe@healher.com',
+                          style: GoogleFonts.poppins(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: kPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text('Edit'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _menuTile(Icons.person_outline, 'Personal Information'),
+            const SizedBox(height: 8),
+            _menuTile(Icons.medical_information, 'Health Records'),
+            const SizedBox(height: 8),
+            _menuTile(Icons.notifications_outlined, 'Notifications'),
+            const SizedBox(height: 8),
+            _menuTile(Icons.lock_outline, 'Privacy & Security'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Text(
+                        'Logout',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      content: Text(
+                        'Are you sure you want to logout?',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.poppins(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/',
+                              (route) => false,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text('Logout', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _menuTile(IconData icon, String title) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: _cardShadow,
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: kPrimary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: kPrimary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
+        ),
+        Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black54),
+      ],
+    ),
+  );
+}
+
+// ---------------------------
+// End of file
+// ---------------------------

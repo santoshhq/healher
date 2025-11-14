@@ -172,7 +172,38 @@ class ProfessionalSignInScreen extends StatelessWidget {
                     onTap: model.isLoading ? null : () => model.signIn(context),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 24),
+
+                  // OR Divider
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          color: Colors.pink.shade200,
+                          thickness: 1,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.pink.shade700,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          color: Colors.pink.shade200,
+                          thickness: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
 
                   // 🔘 Google Sign In (Official UI)
                   _googleSignInButton(
@@ -308,14 +339,25 @@ class ProfessionalSignInScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.login, size: 18, color: Colors.grey.shade700),
-              const SizedBox(width: 8),
-              Text(
-                "Sign in with Google",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade800,
+              Image.network(
+                'https://www.google.com/favicon.ico',
+                height: 24,
+                width: 24,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.login,
+                    color: Colors.black87,
+                    size: 24,
+                  );
+                },
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                "Continue with Google",
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

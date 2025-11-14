@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'Authenticals/signin/signin_widget.dart';
 import 'Authenticals/signup/signup_widget.dart';
 import 'Authenticals/forgetpassword/forgetpassword_widget.dart';
@@ -30,7 +31,10 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordWidget(),
         '/otp-verify': (context) => const OTPVerifyWidget(),
         '/password-reset': (context) => const PasswordResetWidget(),
-        '/home': (context) => const BottomNavigationWidget(),
+        '/home': (context) => ChangeNotifierProvider(
+          create: (_) => NavigationModel(),
+          child: const BottomNavigationShell(),
+        ),
       },
     );
   }
